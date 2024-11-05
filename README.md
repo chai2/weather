@@ -6,13 +6,13 @@ This application integrates multiple services to deliver detailed location and w
 
 Here are some preview images of the application:
 
-![Locations 1 with weather](public/images/loc_1.png)
+![Locations 1 with weather](https://github.com/chai2/weather/blob/main/public/loc_1.png)
 *Home Page*
 
-![Location 2 with Forecast](public/images/loc_2.png)
+![Location 2 with Forecast](https://github.com/chai2/weather/blob/main/public/loc_2.png)
 *Weather Details*
 
-![DB Records](public/images/db_records.png)
+![DB Records](https://github.com/chai2/weather/blob/main/public/db_records.png)
 *Rails Console*
 
 * Ruby version
