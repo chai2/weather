@@ -1,0 +1,128 @@
+<script>
+  async function init() {
+    await customElements.whenDefined('gmp-map');
+
+    const map = document.querySelector('gmp-map');
+    const marker = document.querySelector('gmp-advanced-marker');
+    const placePicker = document.querySelector('gmpx-place-picker');
+    const infowindow = new google.maps.InfoWindow();
+
+    map.innerMap.setOptions({
+      mapTypeControl: false
+    });
+
+    placePicker.addEventListener('gmpx-placechange', async () => {
+      const place = placePicker.value;
+
+      if (!place.location) {
+        window.alert(
+          "No details available for input: '" + place.name + "'"
+        );
+        infowindow.close();
+        marker.position = null;
+        return;
+      }
+
+      if (place.viewport) {
+        map.innerMap.fitBounds(place.viewport);
+      } else {
+        map.center = place.location;
+        map.zoom = 17;
+      }
+
+      marker.position = place.location;
+      infowindow.setContent(
+        `<strong>${place.displayName}</strong><br>
+          <span>${place.formattedAddress}</span>
+      `);
+      infowindow.open(map.innerMap, marker);
+      await savePlace(place);
+
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+<script type="module" src="https://unpkg.com/@googlemaps/extended-component-library@0.6">
+</script>
+<style>
+    html,
+    body {
+      height: 100%;
+      width: 80%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .place-picker-container {
+      padding: 20px;
+    }
+  </style>
+  <body>
+    <div style="display: flex; height: 100%;">
+      <gmpx-api-loader key="API_KEY" solution-channel="GMP_GE_mapsandplacesautocomplete_v1">
+      </gmpx-api-loader>
+      <gmp-map center="40.749933,-73.98633" zoom="13" map-id="DEMO_MAP_ID">
+        <div slot="control-block-start-inline-start" class="place-picker-container">
+          <gmpx-place-picker placeholder="Enter an address"></gmpx-place-picker>
+        </div>
+        <gmp-advanced-marker></gmp-advanced-marker>
+      </gmp-map>
+
+      <div id="location-details" style="padding: 20px;">
+        <h3>Location Details</h3>
+        <p><strong>Address:</strong> <span id="location-address"></span></p>
+        <p><strong>Latitude:</strong> <span id="location-latitude"></span></p>
+        <p><strong>Longitude:</strong> <span id="location-longitude"></span></p>
+        <p><strong>Weather:</strong> <span id="location-weather"></span></p>
+        <p><strong>Forecast(3-hours):</strong> <span id="location-forecast"></span></p>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    async function savePlace(place) {
+      const response = await fetch('/locations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+          address: place.formattedAddress,
+          city: place.locality,
+          state: place.administrativeAreaLevel1,
+          zip: place.postalCode,
+          latitude: place.location.lat(),
+          longitude: place.location.lng()
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Error saving place:', error);
+      } else {
+        console.log('Place saved successfully');
+        document.getElementById('location-address').textContent = place.formattedAddress;
+        document.getElementById('location-latitude').textContent = place.location.lat();
+        document.getElementById('location-longitude').textContent = place.location.lng();
+        const weatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${place.location.lat()}&lon=${place.location.lng()}&appid=API_KEY`);
+        if (!weatherResponse.ok) {
+          const weatherError = await weatherResponse.json();
+          console.error('Error fetching weather:', weatherError);
+        } else {
+            const weatherData = await weatherResponse.json();
+            const currentWeather = weatherData.list[0];
+            const forecast = weatherData.list.slice(0, 3).map(item => {
+            const date = new Date(item.dt * 1000);
+            const tempInFahrenheit = (item.main.temp - 273.15) * 9/5 + 32;
+            return `${date.getHours()}:00 - ${item.weather[0].description}, Temp: ${tempInFahrenheit}F`;
+            }).join('<br>');
+            const currentWeatherFahrenheit = (currentWeather.main.temp - 273.15) * 9/5 + 32;
+
+            document.getElementById('location-weather').textContent = `${currentWeather.weather[0].description}, Temp: ${currentWeatherFahrenheit}F`;
+            document.getElementById('location-forecast').innerHTML = forecast;
+        }
+      }
+    }
+  </script>
