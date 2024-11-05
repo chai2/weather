@@ -1,11 +1,19 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This application integrates multiple services to deliver detailed location and weather information. Upon user input of an address, the application leverages the Google Maps API for address autocomplete functionality and map rendering. Subsequently, it utilizes the Geocoder gem to convert the address into geographic coordinates. These coordinates are then used to query the OpenWeatherMap API, which retrieves and displays comprehensive weather data, including current conditions and a forecast in 3-hour intervals for the next 9 hours. This setup ensures users receive accurate and timely weather updates based on their specified location.
 
-Things you may want to cover:
+## Preview
 
-For a given address with autocomplete looks up google maps api for rendering the maps and displays the location details along with weather. Including 3 3-hours forecast.
+Here are some preview images of the application:
+
+![Locations 1 with weather](public/images/loc_1.png)
+*Home Page*
+
+![Location 2 with Forecast](public/images/loc_2.png)
+*Weather Details*
+
+![DB Records](public/images/db_records.png)
+*Rails Console*
 
 * Ruby version
 - 3.1.2p20
